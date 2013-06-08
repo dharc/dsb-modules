@@ -62,7 +62,16 @@ int disp_init(const NID_t *b)
 	DSB_INIT(Y2,y2);
 	DSB_INIT(Type,type);
 
-	printf("Init display\n");
+	//Get display object
+	dsb_getnzn(b,"display",&base);
+	if (dsb_nid_eq(&base,&Null) == 1)
+	{
+		//Make it if it doesn't exist.
+		dsb_new(b,&base);
+		dsb_setnzn(b,"display",&base);
+	}
+
+	printf("Init boo display\n");
 	SDL_Init(SDL_INIT_VIDEO);
 	screen = SDL_SetVideoMode(800,480,16,SDL_HWSURFACE);
 
@@ -73,10 +82,6 @@ int disp_init(const NID_t *b)
 	}
 
 	SDL_WM_SetCaption("DSB Display","DSB");
-
-	base = *b;
-
-
 
 	return SUCCESS;
 }
@@ -108,7 +113,7 @@ int disp_update()
 	//Test Line Draw
 	SDL_LockSurface(screen);
 
-	disp_drawline(&PRoot);
+	disp_drawline(&base);
 
 	SDL_UnlockSurface(screen);
 	SDL_UpdateRect(screen,0,0,100,100);
