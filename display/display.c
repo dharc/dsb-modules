@@ -53,14 +53,21 @@ DSB_NAME(Y1);
 DSB_NAME(X2);
 DSB_NAME(Y2);
 DSB_NAME(Type);
+DSB_NAME(Width);
+DSB_NAME(Height);
 
 int disp_init(const NID_t *b)
 {
+	int width;
+	int height;
+
 	DSB_INIT(X1,x1);
 	DSB_INIT(Y1,y1);
 	DSB_INIT(X2,x2);
 	DSB_INIT(Y2,y2);
 	DSB_INIT(Type,type);
+	DSB_INIT(Width,width);
+	DSB_INIT(Height,height);
 
 	//Get display object
 	dsb_getnzn(b,"display",&base);
@@ -71,9 +78,22 @@ int disp_init(const NID_t *b)
 		dsb_setnzn(b,"display",&base);
 	}
 
-	printf("Init boo display\n");
+	if (dsb_getnni(&base,Width,&width) != 0)
+	{
+		//Not a number so set to default.
+		width = 640;
+		dsb_setnni(&base,Width,width);
+	}
+	if (dsb_getnni(&base,Height,&height) != 0)
+	{
+		height = 480;
+		dsb_setnni(&base,Height,height);
+	}
+
+	printf("Init SDL display\n");
 	SDL_Init(SDL_INIT_VIDEO);
-	screen = SDL_SetVideoMode(800,480,16,SDL_HWSURFACE);
+
+	screen = SDL_SetVideoMode(width,height,16,SDL_HWSURFACE);
 
 	if (screen == 0)
 	{
