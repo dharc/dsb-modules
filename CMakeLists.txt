@@ -7,13 +7,20 @@ set(dsbmodules_VERSION_PATCH "1")
 
 option(WITH_NO_THREADS "Disable multi-threading" OFF)
 
-set(CMAKE_C_FLAGS "-Wall -D_REENTRANT -D_GNU_SOURCE=1 -L/usr/lib/x86_64-linux-gnu")
+find_package(SDL)
+# find_package(SDL_gfx1.2 REQUIRED)
+
+if ( NOT SDL_FOUND )
+	set(SDL_LIBRARY SDL)
+endif ( NOT SDL_FOUND )
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -D_REENTRANT -D_GNU_SOURCE=1 ")
 set(CMAKE_C_FLAGS_DEBUG "-D_DEBUG -g")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
 
-set(DISPLAYSOURCE display/display.c)
+set(DISPLAYSOURCE display/display.c display/line.c)
 
 add_library(dsbdisplay SHARED ${DISPLAYSOURCE})
-target_link_libraries(dsbdisplay dsbcommon dl SDL SDL_gfx)
+target_link_libraries(dsbdisplay dsbcommon dl ${SDL_LIBRARY} SDL_gfx)
 
 

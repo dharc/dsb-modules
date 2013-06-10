@@ -38,15 +38,17 @@ either expressed or implied, of the FreeBSD Project.
 #include <dsb/wrap.h>
 #include <dsb/globals.h>
 #include <dsb/names.h>
+#include <dsb/array.h>
 
 #include <SDL/SDL.h>
-#include <SDL/SDL_gfxPrimitives.h>
 #include <stdio.h>
+
+#include "display.h"
 
 static struct Module dispmod;
 static NID_t base;
 
-SDL_Surface *screen;
+static SDL_Surface *screen;
 
 DSB_NAME(X1);
 DSB_NAME(Y1);
@@ -55,6 +57,7 @@ DSB_NAME(Y2);
 DSB_NAME(Type);
 DSB_NAME(Width);
 DSB_NAME(Height);
+DSB_NAME(Line);
 
 int disp_init(const NID_t *b)
 {
@@ -68,6 +71,7 @@ int disp_init(const NID_t *b)
 	DSB_INIT(Type,type);
 	DSB_INIT(Width,width);
 	DSB_INIT(Height,height);
+	DSB_INIT(Line,line);
 
 	//Get display object
 	dsb_getnzn(b,"display",&base);
@@ -81,12 +85,12 @@ int disp_init(const NID_t *b)
 	if (dsb_getnni(&base,Width,&width) != 0)
 	{
 		//Not a number so set to default.
-		width = 640;
+		width = 320;
 		dsb_setnni(&base,Width,width);
 	}
 	if (dsb_getnni(&base,Height,&height) != 0)
 	{
-		height = 480;
+		height = 240;
 		dsb_setnni(&base,Height,height);
 	}
 
@@ -102,6 +106,7 @@ int disp_init(const NID_t *b)
 	}
 
 	SDL_WM_SetCaption("DSB Display","DSB");
+	SDL_ShowCursor(SDL_DISABLE);
 
 	return SUCCESS;
 }
@@ -112,28 +117,34 @@ int disp_final()
 	return SUCCESS;
 }
 
-static int disp_drawline(const NID_t *line)
+int disp_object(SDL_Surface *screen, const NID_t *obj)
 {
-	int x1,x2,y1,y2 = 0;
-	int ret;
-	ret =  dsb_getnni(line,X1,&x1);
-	ret += dsb_getnni(line,Y1,&y1);
-	ret += dsb_getnni(line,X2,&x2);
-	ret += dsb_getnni(line,Y2,&y2);
+	NID_t *array;
+	int count = dsb_array_readalloc(obj,&array);
+	int i;
+	NID_t tmp;
 
-	if (ret > 0) return 0;
+	for (i=0; i<count; i++)
+	{
+		dsb_getnzn(&array[i],"type",&tmp);
+		if (dsb_nid_eq(&tmp,Line) == 1)
+		{
+			disp_drawline(screen,&array[i]);
+		}
+	}
 
-	aalineRGBA(screen,x1,y1,x2,y2,255,0,0,255);
+	if (array != 0) free(array);
 
 	return 0;
 }
+
 
 int disp_update()
 {
 	//Test Line Draw
 	SDL_LockSurface(screen);
 
-	disp_drawline(&base);
+	disp_object(screen, &base);
 
 	SDL_UnlockSurface(screen);
 	SDL_UpdateRect(screen,0,0,100,100);
